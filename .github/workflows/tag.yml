@@ -52,5 +52,5 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/tombruijn/repo_with_action/actions/workflows/102010699/dispatches \
+            https://api.github.com/repos/tombruijn/repo_with_action/actions/workflows/102022160/dispatches \
             -d "$payload"
