@@ -1,0 +1,61 @@
+name: "Create package changelog entry"
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Name of the package"
+        required: true
+      version:
+        description: "Version of the package"
+        required: true
+      changelog:
+        description: "Changelog contents"
+        required: true
+      link:
+        description: "Link to full changelog"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create:
+    name: "Create integrations changelog entry"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check out repository"
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Create changelog entry file
+        run: |
+          export NORMALIZED_PACKAGE_NAME=$(echo "$PACKAGE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+          BRANCH_NAME="$NORMALIZED_PACKAGE_NAME-$PACKAGE_VERSION"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+          git checkout -b "$BRANCH_NAME"
+          cat changelog-template.txt | envsubst > "changelog/$NORMALIZED_PACKAGE_NAME-$PACKAGE_VERSION.mdx"
+
+        env:
+          PACKAGE_NAME: ${{ inputs.package }}
+          PACKAGE_VERSION: ${{ inputs.version }}
+          PACKAGE_CHANGELOG: ${{ inputs.changelog }}
+          PACKAGE_LINK: ${{ inputs.link }}
+
+      - name: Commit and push changelog entry
+        run: |
+          git add .
+          git commit -m 'Add changelog entry for ${{ github.event.inputs.package }} ${{ github.event.inputs.version }}' -m 'Contents supplied by GitHub Action API call.'
+          git push origin "${{ env.BRANCH_NAME }}"
+
+      - name: Make Pull Request
+        run: |
+          gh pr create --fill
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

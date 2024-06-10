@@ -1,0 +1,9 @@
+---
+title: "$PACKAGE_NAME $PACKAGE_VERSION"
+category: "$PACKAGE_NAME"
+version: "$PACKAGE_VERSION"
+---
+
+$PACKAGE_CHANGELOG
+
+See the [$PACKAGE_NAME $PACKAGE_VERSION changelog]($PACKAGE_LINK) for more information.
