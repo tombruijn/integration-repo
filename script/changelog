@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eu
+
+export PACKAGE_NAME="Ruby gem"
+export PACKAGE_VERSION="v3.7.5"
+export PACKAGE_CHANGELOG="Some multi line
+text from the API call
+that we want to display."
+export PACKAGE_LINK="https://github.com/appsignal/appsignal-ruby/blob/main/CHANGELOG.md#375"
+export NORMALIZED_PACKAGE_NAME=$(echo "$PACKAGE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+cat changelog-template.txt | envsubst > "changelog/$NORMALIZED_PACKAGE_NAME-$PACKAGE_VERSION.mdx"
