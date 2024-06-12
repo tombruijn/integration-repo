@@ -59,7 +59,7 @@ jobs:
             --arg version "$(echo "${{ env.TAG_NAME }}" | sed 's/^v//')" \
             --arg changelog "$(cat CHANGELOG_TEXT.txt)" \
             --arg assignee "${{ github.actor }}" \
-            '{ref: "main", inputs: {title: $title, category: $category, version: $version, changelog: $changelog}}')
+            '{ref: "main", inputs: {title: $title, category: $category, version: $version, changelog: $changelog, assignee: $assignee}}')
 
           curl -X POST \
             -H "Authorization: token ${{ secrets.GH_API_TOKEN }}" \
