@@ -26,11 +26,12 @@ jobs:
 
       - name: Get tag name
         run: |
-          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          export PACKAGE_PATH=$(echo "${{ env.TAG_NAME }}" | awk -F'[@/]' '{print $3}')
+          export TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          export PACKAGE_PATH=$(echo "$TAG_NAME" | awk -F'[@/]' '{print $3}')
           echo "$PACKAGE_PATH"
           echo "PACKAGE_PATH=$PACKAGE_PATH" >> $GITHUB_ENV
-          export PACKAGE_VERSION=$(echo "${{ env.TAG_NAME }}" | awk -F'@' '{print $3}')
+          export PACKAGE_VERSION=$(echo "$TAG_NAME" | awk -F'@' '{print $3}')
           echo "$PACKAGE_VERSION"
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
 
