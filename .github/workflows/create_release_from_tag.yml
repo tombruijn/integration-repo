@@ -3,7 +3,9 @@ name: "Create release from tag"
 on:
   push:
     tags:
-      - "v**"
+      - "@appsignal/**"
+      - "!@appsignal/core@**"
+      - "!@appsignal/cli@**"
 
 permissions:
   contents: write
@@ -14,9 +16,8 @@ jobs:
     name: "Create release"
     runs-on: ubuntu-latest
     env:
-      PACKAGE_NAME: "Ruby gem"
-      CHANGELOG_CATEGORY: "Ruby"
-      CHANGELOG_LINK: "https://github.com/appsignal/appsignal-ruby/blob/main/CHANGELOG.md"
+      CHANGELOG_CATEGORY: "JavaScript"
+      CHANGELOG_LINK: "https://github.com/appsignal/appsignal-javascript/blob/main/packages/$PACKAGE_PATH/CHANGELOG.md#$CHANGELOG_VERSION"
     steps:
       - name: Checkout repository at tag
         uses: actions/checkout@v4
@@ -26,6 +27,10 @@ jobs:
       - name: Get tag name
         run: |
           echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          PACKAGE_PATH=$(echo "${{ env.TAG_NAME }}" | awk -F'[@/]' '{print $3}')
+          echo "PACKAGE_PATH=${PACKAGE_PATH}" >> $GITHUB_ENV
+          PACKAGE_VERSION=$(echo "${{ env.TAG_NAME }}" | awk -F'@' '{print $3}')
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> $GITHUB_ENV
 
       - name: Get changelog contents from tag
         run: |
@@ -40,23 +45,18 @@ jobs:
           echo "" >> CHANGELOG_TEXT.txt
           echo "" >> CHANGELOG_TEXT.txt
 
-          TAG_NAME_FOR_LINK=$(echo "${{ env.TAG_NAME }}" | sed 's/^v//' | tr -d '.')
-          echo "View the [$PACKAGE_NAME ${{ env.TAG_NAME }} changelog]($CHANGELOG_LINK#$TAG_NAME_FOR_LINK) for more information." >> CHANGELOG_TEXT.txt
-
-      # - name: Make a release
-      #   run: |
-      #     gh release create "${{ env.TAG_NAME }}" --title "Release ${{ env.TAG_NAME }}" --notes-file "CHANGELOG_TEXT.txt" --latest
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     TAG_NAME: ${{ env.TAG_NAME }}
+          export PACKAGE_PATH="${{ env.PACKAGE_PATH }}"
+          export CHANGELOG_VERSION=$(echo "${{ env.PACKAGE_VERSION }}" | sed 's/^v//' | tr -d '.')
+          export CHANGELOG_LINK_WITH_PACKAGE="$(echo "$CHANGELOG_LINK" | envsubst)"
+          echo "View the [AppSignal JavaScript ${{ env.PACKAGE_PATH }} v${{ env.PACKAGE_VERSION }} changelog]($CHANGELOG_LINK_WITH_PACKAGE) for more information." >> CHANGELOG_TEXT.txt
 
       - name: Submit changelog entry
         run: |
           # Prepare JSON payload using jq to ensure proper escaping
           payload=$(jq -n \
-            --arg title "Add changelog entry for $PACKAGE_NAME ${{ env.TAG_NAME }}" \
+            --arg title "AppSignal JavaScript ${{ env.PACKAGE_PATH }} v${{ env.PACKAGE_VERSION }}" \
             --arg category "$CHANGELOG_CATEGORY" \
-            --arg version "$(echo "${{ env.TAG_NAME }}" | sed 's/^v//')" \
+            --arg version "${{ env.TAG_NAME }}" \
             --arg changelog "$(cat CHANGELOG_TEXT.txt)" \
             --arg assignee "${{ github.actor }}" \
             '{ref: "main", inputs: {title: $title, category: $category, version: $version, changelog: $changelog, assignee: $assignee}}')
